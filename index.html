@@ -3,45 +3,96 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Pick & Ban Overlay - Template</title>
+  <title>Pick & Ban Overlay - Fixed (Updated)</title>
   <style>
     :root{--slot-w:96px;--slot-h:96px;--muted:#93a3b8;--accent:#00d4ff;--gap:8px}
     html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
     body{background:transparent;color:#e6f6ff}
-    .wrap{width:1280px;max-width:100%;margin:18px auto;display:flex;gap:20px;align-items:flex-start}
+    .wrap{width:1280px;max-width:100%;margin:18px auto;display:flex;flex-direction:column;gap:20px;align-items:center}
     .overlay{flex:1;background:transparent;border-radius:12px;padding:12px}
     .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
     .teams{display:flex;justify-content:center;gap:0}
     .draft-wrapper{position:relative;display:flex;gap:40px;border-radius:10px;padding:10px;box-sizing:border-box;background:rgba(10,20,40,0.18);align-items:center}
     .pick-ban-wrapper{width:calc(var(--slot-w) * 5 + var(--gap) * 4);display:flex;flex-direction:column;align-items:flex-start;border-radius:10px;padding:6px;box-sizing:border-box;background:transparent}
     .teamB .pick-ban-wrapper{align-items:flex-end}
-    .slot-row{display:flex;gap:var(--gap);margin:0}
-    .slot{box-sizing:border-box;width:var(--slot-w);height:var(--slot-h);border:2px solid #0a3d91;border-radius:8px;background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+    .slot-row{display:flex;gap:var(--gap);margin:0 0 10px 0;}
+    /* make slot background solid gray */
+    .slot{box-sizing:border-box;width:var(--slot-w);height:var(--slot-h);border:2px solid #0a3d91;border-radius:8px;background:#3a3a3a;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
     .slot.empty{opacity:0.9}
-    .slot .label{position:absolute;bottom:6px;left:6px;font-size:11px;color:var(--muted);background:rgba(0,0,0,0.35);padding:2px 6px;border-radius:6px}
+    .slot .label{display:none}
+    .slot .label.visible{
+      position:absolute;
+      bottom:0;
+      left:0;
+      right:0;
+      height:calc(var(--slot-h) * 0.2);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:13px;
+      color:#fff;
+      background:rgba(0,0,0,0.85);
+      font-weight:800;
+      padding:0 6px;
+      border-top-left-radius:0; border-top-right-radius:0;
+      pointer-events:none;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
     .bans{display:flex;gap:6px;margin-top:6px}
     .ban{position:relative;box-sizing:border-box;border:2px solid #0a3d91;width:60px;height:60px;border-radius:6px;background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center;overflow:hidden}
     .vs-slot{width:96px;height:96px;margin:0 12px;position:relative;display:flex;align-items:center;justify-content:center}
-    .admin{}
+    .admin{width:420px;background:rgba(255,255,255,0.02);padding:14px;border-radius:12px}
     .controls{display:flex;gap:8px;align-items:center;margin-bottom:12px}
     .btn{background:var(--accent);color:#051423;padding:6px 10px;border-radius:8px;border:none;cursor:pointer;font-weight:700;text-align:center}
     .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
     .thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
     .thumb{height:72px;border-radius:8px;background:rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden}
+    .thumb.disabled{opacity:0.32;cursor:not-allowed;filter:grayscale(100%);} 
+    .thumb.locked{box-shadow:inset 0 0 0 2px rgba(255,180,40,0.12);}
     .thumb .name{position:absolute;bottom:6px;left:6px;font-size:11px;color:var(--muted);background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:6px}
+    .thumb .lock-icon{position:absolute;top:6px;right:6px;font-size:12px;background:rgba(0,0,0,0.3);padding:4px;border-radius:6px;color:#ffd37a}
     .status{font-size:13px;color:var(--muted);margin-top:6px}
     .flash{animation:flash .8s ease}
+    /* old flash */
     @keyframes flash{0%{filter:brightness(1)}50%{filter:brightness(1.4)}100%{filter:brightness(1)}}
     .slot img,.ban img,.thumb img,.vs-slot img{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;display:block}
-    .ban.banned img{filter:grayscale(100%) brightness(0.5);} .ban .ban-x{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#ff4444;pointer-events:none}
+    .ban.banned img{filter:grayscale(100%) brightness(0.5);} 
+    .ban.banned::after{content:'BANNED';position:absolute;bottom:4px;left:50%;transform:translateX(-50%);font-size:12px;font-weight:800;color:#ff3b3b;text-shadow:0 0 4px #000;pointer-events:none;background:rgba(0,0,0,0.25);padding:2px 6px;border-radius:3px;}
+    .ban .ban-x{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#ff4444;pointer-events:none}
     .pop{animation:popGrow 0.25s ease forwards} @keyframes popGrow{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
     .team-score{width:56px;height:26px;text-align:center;font-size:14px;font-weight:700;background:rgba(0,0,0,0.35);border:none;border-radius:6px;color:#fff;outline:none}
     #phaseLabel{font-size:13px;color:var(--muted)}
     #phaseTimer{font-size:26px;color:#000;font-weight:800}
     @media (max-width:1100px){ .wrap{flex-direction:column;padding:12px} .admin{width:100%} .pick-ban-wrapper{width:100%;box-sizing:border-box} }
+
+    /* ===== Overlay Entrance Animation (LCK/LPL Style) ===== */
+    .overlay-animate { opacity:0; transform:translateY(40px) scale(0.96); animation:overlayEnter 0.9s ease forwards; }
+    @keyframes overlayEnter { 0%{opacity:0;transform:translateY(40px) scale(0.96);filter:blur(6px)}40%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}70%{transform:translateY(-8px) scale(1.02)}100%{transform:translateY(0) scale(1)} }
+    .draft-wrapper > .teamA { animation:fadeUpA 0.9s ease forwards 0.05s; opacity:0; }
+    @keyframes fadeUpA{from{opacity:0;transform:translateY(35px)}to{opacity:1;transform:translateY(0)}}
+    .draft-wrapper > .vs-slot { animation:fadeUpVS 0.9s ease forwards 0.15s; opacity:0; }
+    @keyframes fadeUpVS{from{opacity:0;transform:translateY(45px)}to{opacity:1;transform:translateY(0)}}
+    .draft-wrapper > .teamB { animation:fadeUpB 0.9s ease forwards 0.25s; opacity:0; }
+    @keyframes fadeUpB{from{opacity:0;transform:translateY(35px)}to{opacity:1;transform:translateY(0)}}
+    .slot{opacity:0;transform:translateY(12px) scale(0.96);transition:transform 360ms cubic-bezier(.2,.9,.3,1),opacity 320ms ease}
+    /* Bans should be visible by default so casters can see them — reveal animation only affects picks */
+    .ban{opacity:1;transform:none;transition:none}
+    .reveal{opacity:1!important;transform:none!important}
+    .ban-reveal{opacity:1!important;transform:none!important}
+  /* ===== FLASHING BORDER FOR ACTIVE TURN ===== */
+    @keyframes slotPulse {
+      0% { box-shadow:0 0 0 0 rgba(0,212,255,0.9); border-color:#00d4ff; }
+      50% { box-shadow:0 0 14px 5px rgba(0,212,255,0.65); border-color:#4be8ff; }
+      100% { box-shadow:0 0 0 0 rgba(0,212,255,0.9); border-color:#00d4ff; }
+    }
+    .active-turn {
+      animation:slotPulse 1s ease-in-out infinite !important;
+    }
   </style>
 </head>
-<body>
+<body onload="document.querySelector('.overlay').classList.add('overlay-animate'); setTimeout(()=>{ try{ if(typeof animateDraftEntrance==='function') animateDraftEntrance(); }catch(e){} },300)">
   <div class="wrap">
     <div class="overlay" id="overlay">
       <div class="header">
@@ -62,15 +113,19 @@
                 <input type="file" id="teamALogoFile" accept="image/*" style="display:none" />
               </div>
               <div style="display:flex;flex-direction:column;gap:4px">
-                <div style="font-weight:700" id="teamAName">BLUE TEAM</div>
+                <div style="font-weight:700;color:#000" id="teamAName">BLUE TEAM</div>
                 <input id="teamAScore" class="team-score" value="0" />
               </div>
             </div>
 
             <div class="pick-ban-wrapper">
               <div class="slot-row" id="teamA-picks">
-                <div class="slot empty" data-team="A" data-index="0"><div class="label">P1</div></div>
-                <div class="slot empty" data-team="A" data-index="1"><div class="label">P2</div></div>
+                <div class="slot empty" data-team="A" data-index="0">
+                  <div class="label">P1</div>
+                </div>
+                <div class="slot empty" data-team="A" data-index="1">
+                  <div class="label">P2</div>
+                </div>
                 <div class="slot empty" data-team="A" data-index="2"><div class="label">P3</div></div>
                 <div class="slot empty" data-team="A" data-index="3"><div class="label">P4</div></div>
                 <div class="slot empty" data-team="A" data-index="4"><div class="label">P5</div><input id="scoreA" class="score-input" value="0" style="display:none"/></div>
@@ -85,17 +140,12 @@
           </div>
 
           <div class="vs-slot" id="vsSlot">
-            <!-- Phase label (stays above logo) -->
             <div id="phaseLabel" style="position:absolute;top:-50px;left:50%;transform:translateX(-50%);text-align:center;font-size:13px;color:var(--muted);pointer-events:none;z-index:900">Phase: <strong id="phaseCenter">PICK</strong></div>
-
-            <!-- Upload button and preview inside slot (button on top) -->
             <div style="position:relative;display:flex;align-items:center;justify-content:center;width:100%;height:100%">
               <button id="vsUploadBtn" class="btn" style="position:relative;z-index:3">Upload</button>
               <input type="file" id="vsFile" accept="image/*" style="display:none" />
               <img id="vsPreview" alt="VS" style="position:absolute;inset:0;margin:auto;z-index:2;display:none;border-radius:8px;object-fit:cover;width:100%;height:100%"/>
             </div>
-
-            <!-- Timer placed below the slot (only timer moved) -->
             <div id="phaseTimer" style="position:absolute;top:110%;left:50%;transform:translateX(-50%);text-align:center;">
               <div id="timer">60</div>
             </div>
@@ -105,7 +155,7 @@
           <div class="team teamB" id="teamB">
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;justify-content:flex-end;width:100%">
               <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-                <div style="font-weight:700;text-align:right" id="teamBName">RED TEAM</div>
+                <div style="font-weight:700;text-align:right;color:#000" id="teamBName">RED TEAM</div>
                 <input id="teamBScore" class="team-score" value="0" />
               </div>
               <div id="teamBLogo" style="width:40px;height:40px;border:none;border-radius:6px;overflow:hidden;position:relative;cursor:pointer;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05)">
@@ -166,8 +216,10 @@
       </div>
 
       <div class="controls">
+        <button id="bgUploadBtn" class="btn ghost">Upload background</button>
         <button id="doAction" class="btn">Apply</button>
         <button id="reset" class="btn ghost">Reset</button>
+        <button id="swapTeamsBtn" class="btn ghost" title="Swap team A and B">Swap Teams</button>
       </div>
 
       <div class="field">
@@ -177,7 +229,12 @@
           <button id="clearSearch" class="btn ghost" style="padding:6px 8px">Clear</button>
         </div>
         <div class="thumbs" id="thumbs"></div>
-        <input id="fileInput" type="file" accept="image/*" style="margin-top:8px" />
+        <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+          <button id="fileUploadBtn" class="btn" type="button">Upload thumbnails</button>
+          <button id="importFolderBtn" class="btn ghost" type="button" title="Import a folder of images">Import folder</button>
+          <button id="lockThumbBtn" class="btn ghost" type="button" title="Khóa tướng đã chọn">Khóa</button>
+          <input id="fileInput" type="file" accept="image/*" multiple style="display:none" />
+        </div>
         <div class="status" id="status">No selected hero</div>
       </div>
 
@@ -188,337 +245,348 @@
   </div>
 
   <script>
-    // Helper to safely get element and warn
-    function $id(id){ const el = document.getElementById(id); if(!el) console.warn('Missing element', id); return el }
+  // Wrap all initialization in initOverlay to avoid execution-order issues and catch errors
+  (function initOverlay(){
+    try{
+      // global safe helper
+      function $id(id){ const el = document.getElementById(id); if(!el) console.warn('Missing element', id); return el }
 
-    const thumbsEl = $id('thumbs');
-    const fileInput = $id('fileInput');
-    const status = $id('status');
-    const actionSelect = $id('action');
-    const activeTeam = $id('activeTeam');
-    const doActionBtn = $id('doAction');
-    const resetBtn = $id('reset');
-    const teamAName = $id('inputTeamA');
-    const teamBName = $id('inputTeamB');
-    const teamANameView = $id('teamAName');
-    const teamBNameView = $id('teamBName');
-    const phaseEl = $id('phase');
+      const thumbsEl = $id('thumbs');
+      const fileInput = $id('fileInput');
+      const fileUploadBtn = $id('fileUploadBtn');
+      const status = $id('status');
+      const actionSelect = $id('action');
+      const activeTeam = $id('activeTeam');
+      const doActionBtn = $id('doAction');
+      const resetBtn = $id('reset');
+      const teamAName = $id('inputTeamA');
+      const teamBName = $id('inputTeamB');
+      const teamANameView = $id('teamAName');
+      const teamBNameView = $id('teamBName');
 
-    let thumbs = []; // {id,name,src}
-    let selectedThumb = null;
+      let thumbs = [];
+      let selectedThumb = null;
+      let bannedHeroes = new Set();
+      function isHeroBanned(name){ return bannedHeroes.has(name.toLowerCase()); }
 
-    // Draft order sequence (user-provided)
-    const draftOrder = [
-      {type:'ban', team:'A'}, {type:'ban', team:'B'}, {type:'ban', team:'A'}, {type:'ban', team:'B'},
-      {type:'pick', team:'A'}, {type:'pick', team:'B'}, {type:'pick', team:'B'}, {type:'pick', team:'A'},
-      {type:'pick', team:'A'}, {type:'pick', team:'B'}, {type:'ban', team:'B'}, {type:'ban', team:'A'},
-      {type:'ban', team:'B'}, {type:'ban', team:'A'}, {type:'pick', team:'B'}, {type:'pick', team:'A'},
-      {type:'pick', team:'A'}, {type:'pick', team:'B'}
-    ];
+      const draftOrder = [
+        {type:'ban', team:'A'}, {type:'ban', team:'B'}, {type:'ban', team:'A'}, {type:'ban', team:'B'},
+        {type:'pick', team:'A'}, {type:'pick', team:'B'}, {type:'pick', team:'B'}, {type:'pick', team:'A'},
+        {type:'pick', team:'A'}, {type:'pick', team:'B'}, {type:'ban', team:'B'}, {type:'ban', team:'A'},
+        {type:'ban', team:'B'}, {type:'ban', team:'A'}, {type:'pick', team:'B'}, {type:'pick', team:'A'},
+        {type:'pick', team:'A'}, {type:'pick', team:'B'}
+      ];
+      let stepIndex = 0;
 
-    let stepIndex = 0;
-
-    function getTargetElementForStep(index){
-      const step = draftOrder[index]; if(!step) return null;
-      if(step.type === 'ban'){
-        const els = document.querySelectorAll(`.ban[data-team='${step.team}']`);
-        return Array.from(els).find(b=>!b.dataset.img) || null;
-      } else {
-        return document.querySelector(`.slot.empty[data-team='${step.team}']`);
-      }
-    }
-
-    function highlightStep(index){
-      clearHighlights();
-      const el = getTargetElementForStep(index);
-      if(!el) return;
-      el.classList.add('flash');
-      el.style.outline = '3px solid rgba(0,212,255,0.12)';
-      // update phase display (center) automatically and uppercase
-      const step = draftOrder[index];
-      const phaseCenter = document.getElementById('phaseCenter');
-      if(phaseCenter && step && step.type) phaseCenter.textContent = step.type.toUpperCase();
-      // start timer for this step
-      startTimerForStep(index);
-    }
-
-    function clearHighlights(){
-      document.querySelectorAll('.flash').forEach(e=>e.classList.remove('flash'));
-      document.querySelectorAll('.ban, .slot').forEach(e=>e.style.outline='none');
-    }
-
-    function applyAction(){
-      if(!selectedThumb){ alert('Chọn 1 hero/champion trước (upload hoặc click thumbnail).'); return; }
-      if(!actionSelect || !activeTeam) return;
-      const act = actionSelect.value; const team = activeTeam.value;
-      if(act==='pick'){
-        const slot = document.querySelector(`.slot.empty[data-team='${team}']`);
-        if(!slot){ alert('Không còn slot pick trống cho đội này.'); return; }
-        fillSlot(slot, selectedThumb);
-        slot.classList.add('pop'); setTimeout(()=>slot.classList.remove('pop'),220);
-      } else {
-        const ban = Array.from(document.querySelectorAll(`.ban[data-team='${team}']`)).find(b=>!b.dataset.img);
-        if(!ban){ alert('Không còn slot ban trống cho đội này.'); return; }
-        ban.dataset.img = selectedThumb.src; ban.title = selectedThumb.name;
-        ban.classList.add('banned'); ban.innerHTML = `<img src="${selectedThumb.src}" alt="${selectedThumb.name}"/>`;
-        ban.classList.add('flash'); setTimeout(()=>ban.classList.remove('flash'),800);
-      }
-    }
-
-    function fillSlot(slot, thumb){
-      slot.dataset.img = thumb.src; slot.dataset.name = thumb.name;
-      slot.classList.remove('empty'); slot.innerHTML = `<img src="${thumb.src}" alt="${thumb.name}"/><div class='label'>${thumb.name}</div>`;
-    }
-
-    // Safe attach listeners only if elements exist
-    if(doActionBtn) doActionBtn.addEventListener('click', ()=>{ stopTimer();
-      const step = draftOrder[stepIndex]; if(!step) return;
-      if(activeTeam) activeTeam.value = step.team;
-      if(actionSelect) actionSelect.value = step.type;
-      if(phaseEl) phaseEl.textContent = step.type.toUpperCase();
-      const phaseCenter = document.getElementById('phaseCenter');
-      if(phaseCenter) phaseCenter.textContent = step.type;
-
-      if(selectedThumb){ applyAction(); }
-      else { const target = getTargetElementForStep(stepIndex); if(target){ target.classList.add('flash'); setTimeout(()=>{ if(target) target.classList.remove('flash'); },700); } }
-
-      stepIndex++; if(stepIndex >= draftOrder.length) stepIndex = draftOrder.length - 1;
-      highlightStep(stepIndex);
-    });
-
-    if(resetBtn) resetBtn.addEventListener('click', ()=> resetAll());
-
-    function resetAll(){
-      document.querySelectorAll('.slot').forEach(s=>{ s.innerHTML = `<div class='label'>P${parseInt(s.dataset.index)+1}</div>`; s.classList.add('empty'); delete s.dataset.img; delete s.dataset.name; });
-      document.querySelectorAll('.ban').forEach(b=>{ b.innerHTML=''; delete b.dataset.img; delete b.title; });
-      if(phaseEl) phaseEl.textContent = 'PICK';
-      stepIndex = 0; clearHighlights(); highlightStep(stepIndex);
-    }
-
-    if(teamAName) teamAName.addEventListener('input', ()=>{ if(teamANameView) teamANameView.textContent = teamAName.value; });
-    if(teamBName) teamBName.addEventListener('input', ()=>{ if(teamBNameView) teamBNameView.textContent = teamBName.value; });
-
-    function makePlaceholder(text, bg){ const c = document.createElement('canvas'); c.width=200; c.height=200; const ctx=c.getContext('2d'); ctx.fillStyle=bg||'#223344'; ctx.fillRect(0,0,c.width,c.height); ctx.fillStyle='#fff'; ctx.font='bold 36px monospace'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(text, c.width/2, c.height/2); return c.toDataURL(); }
-
-    const defaults = ['Aatrox','Braum','Corki','Diana','Ekko','Fiora','Garen','Hecarim'];
-    defaults.forEach((n,i)=> thumbs.push({id:i,name:n,src:makePlaceholder(n.substr(0,2), i%2? '#2b3a4a':'#1d2836')}));
-
-    function renderThumbs(){
-      if(!thumbsEl) return;
-      const qEl = document.getElementById('thumbSearch');
-      const q = qEl ? qEl.value.trim().toLowerCase() : '';
-      thumbsEl.innerHTML = '';
-      const frag = document.createDocumentFragment();
-      thumbs.filter(t => {
-        if(!q) return true;
-        return (t.name||'').toLowerCase().includes(q);
-      }).forEach(t => {
-        const d = document.createElement('div');
-        d.className = 'thumb';
-        d.dataset.id = t.id;
-        const img = document.createElement('img');
-        img.src = t.src;
-        d.appendChild(img);
-        const nm = document.createElement('div');
-        nm.className = 'name';
-        nm.textContent = t.name;
-        d.appendChild(nm);
-        d.addEventListener('click', ()=>{ selectThumb(t.id); });
-        frag.appendChild(d);
-      });
-      thumbsEl.appendChild(frag);
-    }
-
-    function selectThumb(id){
-      // set selected thumbnail
-      selectedThumb = thumbs.find(x=>x.id==id);
-      if(!selectedThumb) return;
-      if(status) status.textContent = `Selected: ${selectedThumb.name}`;
-      document.querySelectorAll('.thumb').forEach(el=>el.style.outline='none');
-      const el = document.querySelector(`.thumb[data-id='${id}']`);
-      if(el) el.style.outline = '2px solid rgba(0,212,255,0.14)';
-
-      // show a non-destructive preview on the current target slot/ban for the current step
-      clearAllPreviews();
-      const target = getTargetElementForStep(stepIndex);
-      if(target && selectedThumb){
-        showPreviewOnElement(target, selectedThumb.src, selectedThumb.name);
-      }
-    }
-
-    function showPreviewOnElement(el, src, name){
-      if(!el) return;
-      // don't overwrite an already committed image (dataset.img)
-      if(el.dataset && el.dataset.img) return;
-      // create or update preview img
-      let p = el.querySelector('.preview-img');
-      if(!p){ p = document.createElement('img'); p.className = 'preview-img'; p.alt = name || '';
-        p.style.position = 'absolute'; p.style.top = '0'; p.style.left = '0'; p.style.width = '100%'; p.style.height = '100%'; p.style.objectFit = 'cover'; p.style.opacity = '0.65'; p.style.pointerEvents = 'none';
-        el.appendChild(p);
-      }
-      p.src = src;
-    }
-
-    function clearPreviewOnElement(el){ if(!el) return; const p = el.querySelector('.preview-img'); if(p) p.remove(); }
-    function clearAllPreviews(){ document.querySelectorAll('.slot, .ban').forEach(e=>{ clearPreviewOnElement(e); }); }
-
-    // Champion thumbnail upload (admin panel)
-    if(fileInput) fileInput.addEventListener('change', (e)=>{
-      const f = e.target.files[0];
-      if(!f) return;
-      const reader = new FileReader();
-      reader.onload = ()=>{
-        const id = Date.now();
-        thumbs.push({id,name:f.name.split('.').slice(0,-1).join('.')||f.name,src:reader.result});
-        renderThumbs();
-        selectThumb(id);
-      };
-      reader.readAsDataURL(f);
-    });
-
-    // Bulk import: select multiple image files or a folder (webkitdirectory)
-    const bulkInput = document.createElement('input');
-    bulkInput.type = 'file';
-    bulkInput.multiple = true;
-    bulkInput.setAttribute('webkitdirectory', '');
-    bulkInput.style.display = 'block';
-    bulkInput.style.marginTop = '6px';
-    bulkInput.id = 'bulkInput';
-    const thumbsContainer = document.getElementById('thumbs');
-    if(thumbsContainer) thumbsContainer.parentNode.insertBefore(bulkInput, thumbsContainer.nextSibling);
-
-    bulkInput.addEventListener('change', async (e)=>{
-      const files = Array.from(e.target.files || []);
-      if(!files.length) return;
-      // read image files only
-      const imgFiles = files.filter(f=>f.type && f.type.startsWith('image/'));
-      for(const f of imgFiles){
-        await new Promise(resolve=>{
-          const r = new FileReader();
-          r.onload = ()=>{
-            const id = Date.now() + Math.floor(Math.random()*1000);
-            thumbs.push({id,name:f.name,src:r.result});
-            resolve();
-          };
-          r.readAsDataURL(f);
-        });
-      }
-      renderThumbs();
-      if(thumbs.length) selectThumb(thumbs[thumbs.length-1].id);
-    });
-
-    // Team logo upload handlers
-const teamALogo = document.getElementById('teamALogo');
-const teamALogoFile = document.getElementById('teamALogoFile');
-const teamBLogo = document.getElementById('teamBLogo');
-const teamBLogoFile = document.getElementById('teamBLogoFile');
-
-function setupLogoUpload(box, file){
-  if(!box || !file) return;
-  box.addEventListener('click', ()=> file.click());
-  file.addEventListener('change', e=>{
-    const f = e.target.files[0];
-    if(!f) return;
-    const reader = new FileReader();
-    reader.onload = ()=>{
-      box.innerHTML = `<img src="${reader.result}" style='width:100%;height:100%;object-fit:contain'/>`;
-    };
-    reader.readAsDataURL(f);
-  });
-}
-
-setupLogoUpload(teamALogo, teamALogoFile);
-setupLogoUpload(teamBLogo, teamBLogoFile);
-
-// VS upload handler
-    const vsUploadBtn = document.getElementById('vsUploadBtn');
-    const vsFile = document.getElementById('vsFile');
-    const vsPreview = document.getElementById('vsPreview');
-
-    if(vsUploadBtn && vsFile){
-      vsUploadBtn.addEventListener('click', ()=> vsFile.click());
-      vsFile.addEventListener('change', e=>{
-        const f = e.target.files[0];
-        if(!f) return;
-        const reader = new FileReader();
-        reader.onload = ()=>{
-          // set src and styles properly (fixed syntax error)
-          vsPreview.src = reader.result;
-          vsPreview.style.display = 'block';
-          vsPreview.style.height = '100%';
-          vsPreview.style.objectFit = 'cover';
-          // hide upload button after image loads
-          vsUploadBtn.style.display = 'none';
-          // make preview clickable to re-upload
-          vsPreview.addEventListener('click', ()=> vsFile.click());
-        };
-        reader.readAsDataURL(f);
-      });
-    }
-
-    // init
-    renderThumbs(); if(thumbs.length) selectThumb(thumbs[0].id);
-    // wire search input
-    const thumbSearch = document.getElementById('thumbSearch');
-    const clearSearch = document.getElementById('clearSearch');
-    if(thumbSearch){ thumbSearch.addEventListener('input', ()=>{ renderThumbs(); }); }
-    if(clearSearch){ clearSearch.addEventListener('click', ()=>{ if(thumbSearch) thumbSearch.value=''; renderThumbs(); }); }
-
-    // Timer logic (30s ban, 60s pick)
-    const timerEl = document.getElementById('timer');
-    let timerInterval = null;
-    let timerRemaining = 0;
-
-    function startTimerForStep(index){
-      stopTimer();
-      const step = draftOrder[index]; if(!step) return;
-      const seconds = step.type === 'ban' ? 30 : 60;
-      timerRemaining = seconds;
-      if(timerEl) timerEl.textContent = String(timerRemaining);
-      timerInterval = setInterval(()=>{
-        timerRemaining -= 1;
-        if(timerEl) timerEl.textContent = String(timerRemaining);
-        if(timerRemaining <= 0){
-          clearInterval(timerInterval); timerInterval = null;
-          autoAdvanceOnTimeout();
+      function getTargetElementForStep(index){
+        const step = draftOrder[index]; if(!step) return null;
+        if(step.type === 'ban'){
+          const els = document.querySelectorAll(`.ban[data-team='${step.team}']`);
+          return Array.from(els).find(b=>!b.dataset.img) || null;
+        } else {
+          return document.querySelector(`.slot.empty[data-team='${step.team}']`);
         }
-      }, 1000);
-    }
-
-    function stopTimer(){ if(timerInterval){ clearInterval(timerInterval); timerInterval = null; } }
-
-    function autoAdvanceOnTimeout(){
-      const step = draftOrder[stepIndex];
-      if(!step) return;
-      // if selectedThumb exists try to apply action automatically; otherwise just advance
-      if(selectedThumb){ doActionBtn && doActionBtn.click(); }
-      else { stepIndex++; if(stepIndex >= draftOrder.length) stepIndex = draftOrder.length - 1; highlightStep(stepIndex); }
-    }
-
-    document.addEventListener('keydown', (e)=>{ if(e.key && e.key.toLowerCase() === 'l'){ if(activeTeam) activeTeam.value = activeTeam.value === 'A' ? 'B' : 'A'; } });
-
-    document.addEventListener('click', (e)=>{
-      const slot = e.target.closest('.slot');
-      if(slot && slot.dataset.img){ if(confirm('Clear this slot?')){ slot.innerHTML = `<div class='label'>P${parseInt(slot.dataset.index)+1}</div>`; slot.classList.add('empty'); delete slot.dataset.img; delete slot.dataset.name; } }
-      const ban = e.target.closest('.ban'); if(ban && ban.dataset.img){ if(confirm('Clear this ban?')){ ban.innerHTML=''; delete ban.dataset.img; delete ban.title; } }
-    });
-
-    highlightStep(stepIndex);
-
-    // applyQueryDefaults: read url params width/height and set overlay width if present
-    function applyQueryDefaults(){
-      const params = new URLSearchParams(location.search);
-      const w = params.get('width');
-      const h = params.get('height');
-      if(w && document.querySelector('.overlay')) document.querySelector('.overlay').style.width = w + 'px';
-      // hide admin in live mode
-      if(params.get('live') === '1'){
-        const adminPanel = document.querySelector('.admin');
-        if(adminPanel) adminPanel.style.display = 'none';
       }
-    }
 
-    applyQueryDefaults();
-  </script>
+      function startTimerForStep(index){ stopTimer(); const step = draftOrder[index]; if(!step) return; const seconds = step.type === 'ban' ? 30 : 60; timerRemaining = seconds; if(timerEl) timerEl.textContent = String(timerRemaining); timerInterval = setInterval(()=>{ timerRemaining -= 1; if(timerEl) timerEl.textContent = String(timerRemaining); if(timerRemaining <= 0){ clearInterval(timerInterval); timerInterval = null; autoAdvanceOnTimeout(); } },1000); }
+      function stopTimer(){ if(timerInterval){ clearInterval(timerInterval); timerInterval = null; } }
+
+      function highlightStep(index){
+        clearHighlights();
+        const el = getTargetElementForStep(index);
+        if(!el) return;
+        el.classList.add('active-turn');
+        el.style.outline = '3px solid rgba(0,212,255,0.12)';
+        const step = draftOrder[index];
+        const phaseCenter = document.getElementById('phaseCenter');
+        if(phaseCenter && step && step.type) phaseCenter.textContent = step.type.toUpperCase();
+        startTimerForStep(index);
+      }
+
+      function clearHighlights(){
+        document.querySelectorAll('.active-turn').forEach(e=> e.classList.remove('active-turn'));
+        document.querySelectorAll('.flash').forEach(e=> e.classList.remove('flash'));
+        document.querySelectorAll('.ban, .slot').forEach(e=> e.style.outline='none');
+      }
+
+      function applyAction(){
+        if(!selectedThumb){ alert('Chọn 1 hero/champion trước (upload hoặc click thumbnail).'); return; }
+        if(selectedThumb.locked){ alert('Tướng này đã được khoá (locked).'); return; }
+        if(isHeroBanned(selectedThumb.name)){
+          alert('Tướng này đã bị cấm — không thể chọn.');
+          return;
+        }
+        const act = actionSelect.value;
+        const team = activeTeam.value;
+        if(act==='pick'){
+          const slot = document.querySelector(`.slot.empty[data-team='${team}']`);
+          if(!slot){ alert('Không còn slot pick trống cho đội này.'); return; }
+          fillSlot(slot, selectedThumb);
+          // mark thumb as used (so it cannot be picked again)
+          selectedThumb.used = true;
+          renderThumbs();
+          slot.classList.add('pop'); setTimeout(()=>slot.classList.remove('pop'),220);
+        } else {
+          const ban = Array.from(document.querySelectorAll(`.ban[data-team='${team}']`)).find(b=>!b.dataset.img);
+          if(!ban){ alert('Không còn slot ban trống cho đội này.'); return; }
+          ban.dataset.img = selectedThumb.src;
+          ban.dataset.name = selectedThumb.name;
+          ban.title = selectedThumb.name;
+          ban.classList.add('banned');
+          ban.innerHTML = `<img src="${selectedThumb.src}" alt="${selectedThumb.name}"/>`;
+          bannedHeroes.add(selectedThumb.name.toLowerCase());
+          // mark used
+          selectedThumb.used = true;
+          renderThumbs();
+          ban.classList.add('active-turn'); setTimeout(()=>ban.classList.remove('flash'),800);
+        }
+      }
+
+      function fillSlot(slot, thumb){
+        const idx = slot.dataset.index;
+        clearPreviewOnElement(slot);
+        slot.dataset.img = thumb.src;
+        slot.dataset.name = thumb.name;
+        // remove empty marker and ensure slot becomes visible
+        slot.classList.remove('empty');
+        slot.classList.add('reveal');
+        // remove child nodes safely
+        while(slot.firstChild) slot.removeChild(slot.firstChild);
+        const img = document.createElement('img'); img.src = thumb.src; img.alt = thumb.name; img.className = 'committed-img'; img.style.position='absolute'; img.style.top='0'; img.style.left='0'; img.style.width='100%'; img.style.height='100%'; img.style.objectFit='cover'; slot.appendChild(img);
+        const lbl = document.createElement('div'); lbl.className='label visible'; lbl.textContent = thumb.name; slot.appendChild(lbl);
+        // ensure visible even if CSS transitions present
+        slot.style.opacity = '1';
+        if(typeof idx !== 'undefined') slot.dataset.index = idx;
+      }
+
+      // resetAll: clear picks, bans, timers and banned list
+      function resetAll(){
+        try{
+          stopTimer();
+          document.querySelectorAll('.slot').forEach(s=>{
+            while(s.firstChild) s.removeChild(s.firstChild);
+            s.innerHTML = `<div class='label'>P${parseInt(s.dataset.index)+1}</div>`;
+            s.classList.add('empty');
+            delete s.dataset.img; delete s.dataset.name;
+            s.style.opacity = '';
+          });
+          document.querySelectorAll('.ban').forEach(b=>{
+            b.innerHTML = '';
+            b.classList.remove('banned');
+            delete b.dataset.img; delete b.dataset.name; b.title='';
+          });
+          bannedHeroes.clear();
+          // clear used/locked states on thumbs
+          thumbs.forEach(t=>{ delete t.used; delete t.locked; });
+          stepIndex = 0;
+          if(phaseEl) phaseEl.textContent = 'PICK';
+          renderThumbs();
+          highlightStep(stepIndex);
+        }catch(e){ console.warn('resetAll err', e); }
+      }
+
+      function makePlaceholder(text, bg){ const c = document.createElement('canvas'); c.width=200; c.height=200; const ctx=c.getContext('2d'); ctx.fillStyle=bg||'#223344'; ctx.fillRect(0,0,c.width,c.height); ctx.fillStyle='#fff'; ctx.font='bold 36px monospace'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(text, c.width/2, c.height/2); return c.toDataURL(); }
+
+      function renderThumbs(){
+        if(!thumbsEl) return;
+        const qEl = document.getElementById('thumbSearch');
+        const q = qEl ? qEl.value.trim().toLowerCase() : '';
+        thumbsEl.innerHTML = '';
+        const frag = document.createDocumentFragment();
+        thumbs.filter(t => { if(!q) return true; return (t.name||'').toLowerCase().includes(q); }).forEach(t => {
+          const d = document.createElement('div'); d.className = 'thumb'; d.dataset.id = t.id;
+          // disabled if banned or already picked
+          const used = document.querySelector(`[data-name='${CSS.escape(t.name)}']`);
+          if(used || bannedHeroes.has((t.name||'').toLowerCase()) || t.used) d.classList.add('disabled');
+          if(t.locked) d.classList.add('locked');
+          const img = document.createElement('img'); img.src = t.src; d.appendChild(img);
+          const nm = document.createElement('div'); nm.className = 'name'; nm.textContent = t.name; d.appendChild(nm);
+          // lock icon
+          const lock = document.createElement('div'); lock.className='lock-icon'; lock.innerHTML = t.locked ? '🔒' : '🔓'; lock.title = t.locked ? 'Đã khoá' : 'Bấm để khoá';
+          lock.addEventListener('click', (ev)=>{ ev.stopPropagation(); toggleLockThumb(t.id); });
+          d.appendChild(lock);
+          d.addEventListener('click', ()=>{ if(d.classList.contains('disabled')) return; selectThumb(t.id); });
+          frag.appendChild(d);
+        });
+        thumbsEl.appendChild(frag);
+      }
+
+      function toggleLockThumb(id){ const t = thumbs.find(x=>x.id==id); if(!t) return; t.locked = !t.locked; // if locking, also mark as used to avoid re-pick; if unlocking, clear used only if it wasn't actually picked
+        if(t.locked) t.used = true; else if(!t.picked) t.used = false; renderThumbs(); if(selectedThumb && selectedThumb.id==id){ selectedThumb = t; if(status) status.textContent = `Selected: ${selectedThumb.name} ${t.locked? '(locked)':''}`; } }
+
+      function selectThumb(id){ selectedThumb = thumbs.find(x=>x.id==id); if(!selectedThumb) return; if(selectedThumb.locked){ alert('Tướng này đã khoá.'); return; } if(status) status.textContent = `Selected: ${selectedThumb.name}`; document.querySelectorAll('.thumb').forEach(el=>el.style.outline='none'); const el = document.querySelector(`.thumb[data-id='${id}']`); if(el) el.style.outline = '2px solid rgba(0,212,255,0.14)'; clearAllPreviews(); const target = getTargetElementForStep(stepIndex); if(target && selectedThumb) showPreviewOnElement(target, selectedThumb.src, selectedThumb.name); }
+
+      function showPreviewOnElement(el, src, name){ if(!el) return; if(el.dataset && el.dataset.img) return; let p = el.querySelector('.preview-img'); if(!p){ p = document.createElement('img'); p.className='preview-img'; p.alt = name||''; p.style.position='absolute'; p.style.top='0'; p.style.left='0'; p.style.width='100%'; p.style.height='100%'; p.style.objectFit='cover'; p.style.opacity='0.65'; p.style.pointerEvents='none'; el.appendChild(p); } p.src = src; }
+      function clearPreviewOnElement(el){ if(!el) return; const p = el.querySelector('.preview-img'); if(p) p.remove(); }
+      function clearAllPreviews(){ document.querySelectorAll('.slot, .ban').forEach(e=>{ clearPreviewOnElement(e); }); }
+
+      // file inputs
+      const bulkInput = document.createElement('input'); bulkInput.type='file'; bulkInput.multiple=true; bulkInput.setAttribute('webkitdirectory',''); bulkInput.style.display='none'; document.body.appendChild(bulkInput);
+      bulkInput.addEventListener('change', async (e)=>{ const files = Array.from(e.target.files||[]); const imgFiles = files.filter(f=>f.type && f.type.startsWith('image/'));
+        for(const f of imgFiles){ await new Promise(resolve=>{ const r = new FileReader(); r.onload = ()=>{ thumbs.push({id:Date.now()+Math.floor(Math.random()*1000),name:f.name.split('.').slice(0,-1).join('.')||f.name,src:r.result}); resolve(); }; r.readAsDataURL(f); }); }
+        renderThumbs(); if(thumbs.length) selectThumb(thumbs[thumbs.length-1].id);
+      });
+
+      if(fileInput) fileInput.addEventListener('change', (e)=>{
+        try{
+          const files = Array.from(e.target.files || []);
+          if(!files.length) return;
+          (async ()=>{
+            for(const f of files){
+              if(!f.type || !f.type.startsWith('image/')) continue;
+              await new Promise(resolve=>{
+                const reader = new FileReader();
+                reader.onload = ()=>{ const id = Date.now() + Math.floor(Math.random()*1000); thumbs.push({id,name:f.name.split('.').slice(0,-1).join('.')||f.name,src:reader.result}); resolve(); };
+                reader.readAsDataURL(f);
+              });
+            }
+            renderThumbs(); if(thumbs.length) selectThumb(thumbs[thumbs.length-1].id);
+          })();
+        }catch(err){ console.error('fileInput change error', err); }
+      });
+      if(fileUploadBtn && fileInput) fileUploadBtn.addEventListener('click', ()=> fileInput.click());
+      const importFolderBtn = $id('importFolderBtn'); if(importFolderBtn){ importFolderBtn.addEventListener('click', ()=>{ if(bulkInput) bulkInput.click(); else alert('Folder import not supported in this browser'); }); }
+
+      // team logo
+      const teamALogo = $id('teamALogo'); const teamALogoFile = $id('teamALogoFile'); const teamBLogo = $id('teamBLogo'); const teamBLogoFile = $id('teamBLogoFile');
+      function setupLogoUpload(box,file){ if(!box||!file) return; box.addEventListener('click', ()=> file.click()); file.addEventListener('change', e=>{ const f = e.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = ()=>{ box.innerHTML = `<img src=\"${r.result}\" style='width:100%;height:100%;object-fit:contain'/>`; }; r.readAsDataURL(f); }); }
+      setupLogoUpload(teamALogo, teamALogoFile); setupLogoUpload(teamBLogo, teamBLogoFile);
+
+      // VS upload
+      const vsUploadBtn = $id('vsUploadBtn'); const vsFile = $id('vsFile'); const vsPreview = $id('vsPreview');
+      if(vsUploadBtn && vsFile){ vsUploadBtn.addEventListener('click', ()=> vsFile.click()); vsFile.addEventListener('change', e=>{ const f = e.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = ()=>{ if(vsPreview){ vsPreview.src = r.result; vsPreview.style.display='block'; vsPreview.style.height='100%'; vsPreview.style.objectFit='cover'; } if(vsUploadBtn) vsUploadBtn.style.display='none'; if(vsPreview) vsPreview.addEventListener('click', ()=> vsFile.click()); }; r.readAsDataURL(f); }); }
+
+      // timer
+      const timerEl = $id('timer'); let timerInterval = null; let timerRemaining = 0;
+      function autoAdvanceOnTimeout(){ const step = draftOrder[stepIndex]; if(!step) return; if(selectedThumb){ if(doActionBtn) doActionBtn.click(); } else { stepIndex++; if(stepIndex >= draftOrder.length) stepIndex = draftOrder.length - 1; highlightStep(stepIndex); } }
+
+      // lock button (global) - locks currently selected thumb
+      const lockThumbBtn = $id('lockThumbBtn'); if(lockThumbBtn){ lockThumbBtn.addEventListener('click', ()=>{ if(!selectedThumb){ alert('Chưa chọn tướng để khoá'); return; } const t = thumbs.find(x=>x.id==selectedThumb.id); if(!t) return; t.locked = !t.locked; if(t.locked) t.used = true; renderThumbs(); if(status) status.textContent = `Selected: ${t.name} ${t.locked? '(locked)':''}`; }); }
+
+      // listeners
+      if(doActionBtn) doActionBtn.addEventListener('click', ()=>{
+        stopTimer(); const step = draftOrder[stepIndex]; if(!step) return; if(activeTeam) activeTeam.value = step.team; if(actionSelect) actionSelect.value = step.type; if(phaseEl) phaseEl.textContent = step.type.toUpperCase(); const phaseCenter = document.getElementById('phaseCenter'); if(phaseCenter) phaseCenter.textContent = step.type; if(selectedThumb){ applyAction(); } else { const target = getTargetElementForStep(stepIndex); if(target){ target.classList.add('flash'); setTimeout(()=>{ if(target) target.classList.remove('flash'); },700); } } stepIndex++; if(stepIndex >= draftOrder.length) stepIndex = draftOrder.length - 1; highlightStep(stepIndex);
+      });
+
+      if(resetBtn) resetBtn.addEventListener('click', ()=> resetAll());
+      if(teamAName) teamAName.addEventListener('input', ()=>{ if(teamANameView) teamANameView.textContent = teamAName.value; });
+      if(teamBName) teamBName.addEventListener('input', ()=>{ if(teamBNameView) teamBNameView.textContent = teamBName.value; });
+
+      document.addEventListener('keydown', (e)=>{ if(e.key && e.key.toLowerCase() === 'l'){ if(activeTeam) activeTeam.value = activeTeam.value === 'A' ? 'B' : 'A'; } });
+      document.addEventListener('click', (e)=>{ const slot = e.target.closest('.slot'); if(slot && slot.dataset.img){ if(confirm('Clear this slot?')){ while(slot.firstChild) slot.removeChild(slot.firstChild); slot.innerHTML = `<div class='label'>P${parseInt(slot.dataset.index)+1}</div>`; slot.classList.add('empty'); delete slot.dataset.img; delete slot.dataset.name; // free any used thumb that matches this name
+            thumbs.forEach(t=>{ if(t.name===slot.dataset.name) { delete t.used; delete t.picked; } }); } } const ban = e.target.closest('.ban'); if(ban && ban.dataset.img){ if(confirm('Clear this ban?')){ const oldName = ban.dataset.name; ban.innerHTML=''; delete ban.dataset.img; delete ban.title; bannedHeroes.delete((oldName||'').toLowerCase()); // free thumb
+            thumbs.forEach(t=>{ if(t.name===oldName){ delete t.used; } }); renderThumbs(); } } });
+
+      // entrance animation
+      function animateDraftEntrance(){ try{ const easeDelay = 120; const slotsA = Array.from(document.querySelectorAll('.teamA .slot-row .slot')); slotsA.forEach((el,i)=> setTimeout(()=> el.classList.add('reveal'), i*easeDelay)); const slotsB = Array.from(document.querySelectorAll('.teamB .slot-row .slot')); slotsB.reverse().forEach((el,idx)=> setTimeout(()=> el.classList.add('reveal'), idx*easeDelay + 80)); const allBanDelay = Math.max(slotsA.length, slotsB.length)*easeDelay + 200; const bansA = Array.from(document.querySelectorAll('.teamA .bans .ban')); bansA.reverse().forEach((b,j)=> setTimeout(()=> b.classList.add('ban-reveal'), allBanDelay + j*90)); const bansB = Array.from(document.querySelectorAll('.teamB .bans .ban')); bansB.reverse().forEach((b,j)=> setTimeout(()=> b.classList.add('ban-reveal'), allBanDelay + j*90 + 40)); }catch(e){ console.warn('animateDraftEntrance err',e); } }
+
+      // utilities and init
+      function makePlaceholder2(n){ return makePlaceholder(n.substr(0,2),'#223'); }
+      const defaults = [];
+      renderThumbs(); if(thumbs.length) selectThumb(thumbs[0].id);
+      const thumbSearch = $id('thumbSearch'); const clearSearch = $id('clearSearch'); if(thumbSearch) thumbSearch.addEventListener('input', ()=> renderThumbs()); if(clearSearch) clearSearch.addEventListener('click', ()=>{ if(thumbSearch) thumbSearch.value=''; renderThumbs(); });
+
+      function applyQueryDefaults(){ try{ const params = new URLSearchParams(location.search); const w = params.get('width'); const h = params.get('height'); if(w && document.querySelector('.overlay')) document.querySelector('.overlay').style.width = w + 'px'; if(params.get('live') === '1'){ const adminPanel = document.querySelector('.admin'); if(adminPanel) adminPanel.style.display = 'none'; } }catch(e){console.warn(e);} }
+      function detectLiveHost(){ try{ const host = (location.hostname||'').toLowerCase(); const refHost = (document.referrer && (()=>{ try{ return new URL(document.referrer).hostname.toLowerCase(); }catch(e){ return ''; } })()) || ''; if(/(^|\.)tiktok\.com$/.test(host) || /tiktokcdn\.com$/.test(host) || /tiktok\.com/.test(refHost)){ const adminPanel = document.querySelector('.admin'); if(adminPanel) adminPanel.style.display = 'none'; try{ document.documentElement.style.background='transparent'; document.body.style.background='transparent'; }catch(e){} } }catch(e){console.warn(e);} }
+
+      // Swap teams utility: swap names, logos, scores, picks and bans between team A and B
+      function swapTeams(){
+        try{
+          // swap input values and visible names
+          const inputA = document.getElementById('inputTeamA');
+          const inputB = document.getElementById('inputTeamB');
+          const viewA = document.getElementById('teamAName');
+          const viewB = document.getElementById('teamBName');
+          if(inputA && inputB){ const t = inputA.value; inputA.value = inputB.value; inputB.value = t; }
+          if(viewA && viewB){ const t = viewA.textContent; viewA.textContent = viewB.textContent; viewB.textContent = t; }
+          // swap scores
+          const scoreA = document.getElementById('teamAScore');
+          const scoreB = document.getElementById('teamBScore');
+          if(scoreA && scoreB){ const s = scoreA.value; scoreA.value = scoreB.value; scoreB.value = s; }
+          // swap logos innerHTML
+          const logoA = document.getElementById('teamALogo');
+          const logoB = document.getElementById('teamBLogo');
+          if(logoA && logoB){ const h = logoA.innerHTML; logoA.innerHTML = logoB.innerHTML; logoB.innerHTML = h; }
+
+          // swap slots (picks) contents and dataset.img/name and classes
+          for(let i=0;i<5;i++){
+            const slotA = document.querySelector(`.slot[data-team='A'][data-index='${i}']`);
+            const slotB = document.querySelector(`.slot[data-team='B'][data-index='${i}']`);
+            if(!slotA || !slotB) continue;
+            // store A
+            const aHTML = slotA.innerHTML;
+            const aImg = slotA.dataset.img;
+            const aName = slotA.dataset.name;
+            const aEmpty = slotA.classList.contains('empty');
+            // store B
+            const bHTML = slotB.innerHTML;
+            const bImg = slotB.dataset.img;
+            const bName = slotB.dataset.name;
+            const bEmpty = slotB.classList.contains('empty');
+            // swap innerHTML
+            slotA.innerHTML = bHTML || `<div class='label'>P${parseInt(slotA.dataset.index)+1}</div>`;
+            slotB.innerHTML = aHTML || `<div class='label'>P${parseInt(slotB.dataset.index)+1}</div>`;
+            // swap datasets
+            if(bImg){ slotA.dataset.img = bImg; slotA.dataset.name = bName || ''; } else { delete slotA.dataset.img; delete slotA.dataset.name; }
+            if(aImg){ slotB.dataset.img = aImg; slotB.dataset.name = aName || ''; } else { delete slotB.dataset.img; delete slotB.dataset.name; }
+            // swap empty class
+            if(bEmpty) slotA.classList.add('empty'); else slotA.classList.remove('empty');
+            if(aEmpty) slotB.classList.add('empty'); else slotB.classList.remove('empty');
+          }
+
+          // swap bans
+          for(let i=0;i<4;i++){
+            const banA = document.querySelector(`.ban[data-team='A'][data-ban='${i}']`);
+            const banB = document.querySelector(`.ban[data-team='B'][data-ban='${i}']`);
+            if(!banA || !banB) continue;
+            const aHTML = banA.innerHTML; const aImg = banA.dataset.img; const aTitle = banA.title;
+            const bHTML = banB.innerHTML; const bImg = banB.dataset.img; const bTitle = banB.title;
+            banA.innerHTML = bHTML || '';
+            banB.innerHTML = aHTML || '';
+            if(bImg){ banA.dataset.img = bImg; banA.title = bTitle || ''; banA.classList.add('banned'); } else { banA.classList.remove('banned'); delete banA.dataset.img; banA.title=''; }
+            if(aImg){ banB.dataset.img = aImg; banB.title = aTitle || ''; banB.classList.add('banned'); } else { banB.classList.remove('banned'); delete banB.dataset.img; banB.title=''; }
+          }
+
+          // after swapping, re-run highlight to refresh outlines
+          highlightStep(stepIndex);
+        }catch(err){ console.warn('swapTeams error', err); alert('Swap failed: '+err.message); }
+      }
+
+      const swapBtn = $id('swapTeamsBtn'); if(swapBtn) swapBtn.addEventListener('click', swapTeams);
+
+      detectLiveHost(); applyQueryDefaults();
+      // start highlight after defaults
+      highlightStep(stepIndex);
+
+    }catch(err){
+      console.error('initOverlay error', err);
+      // surface to user in-page
+      const s = document.createElement('div'); s.style.position='fixed'; s.style.left='10px'; s.style.bottom='10px'; s.style.padding='10px'; s.style.background='rgba(255,60,60,0.95)'; s.style.color='#fff'; s.style.zIndex=99999; s.textContent = 'Overlay init error: ' + (err && err.message ? err.message : String(err)); document.body.appendChild(s);
+    }
+  })();
+  // Background upload handler
+  (function(){
+    const btn = document.getElementById('bgUploadBtn');
+    const overlay = document.getElementById('overlay');
+    if(!btn || !overlay) return;
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = 'image/*';
+    inp.style.display = 'none';
+    document.body.appendChild(inp);
+    btn.addEventListener('click', ()=> inp.click());
+    inp.addEventListener('change', e=>{
+      const f = e.target.files && e.target.files[0];
+      if(!f) return;
+      const r = new FileReader();
+      r.onload = ()=>{
+        overlay.style.backgroundImage = `url(${r.result})`;
+        overlay.style.backgroundSize = 'cover';
+        overlay.style.backgroundPosition = 'center';
+      };
+      r.readAsDataURL(f);
+    });
+  })();
+</script>
 </body>
 </html>
